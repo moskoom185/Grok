@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { listDocs, createDoc } from "@/lib/docs.functions";
-import { TEMPLATES, type DocType } from "@/lib/doc-model";
+import { listDocs } from "@/lib/docs.functions";
 import { Button } from "@/components/ui/button";
+import { NewDocDialog } from "@/components/NewDocDialog";
 import { FileText, Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -22,7 +22,7 @@ type DocSummary = {
 function DocumentListPage() {
   const [docs, setDocs] = useState<DocSummary[]>([]);
   const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   async function refresh() {
     setLoading(true);
@@ -41,27 +41,6 @@ function DocumentListPage() {
     refresh();
   }, []);
 
-  async function handleCreate(docType: DocType = "SOP") {
-    setCreating(true);
-    try {
-      const template = TEMPLATES.find((t) => t.docTypes.includes(docType)) ?? TEMPLATES[0];
-      const row = await createDoc({
-        data: {
-          title: `${docType} ใหม่`,
-          docType,
-          templateId: template.id,
-        },
-      });
-      toast.success("สร้างเอกสารแล้ว");
-      window.location.href = `/editor/${row.id}`;
-    } catch (e) {
-      toast.error("สร้างเอกสารไม่สำเร็จ");
-      console.error(e);
-    } finally {
-      setCreating(false);
-    }
-  }
-
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
@@ -74,25 +53,10 @@ function DocumentListPage() {
               สร้างเอกสารมาตรฐานจากไฟล์ต้นฉบับ
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button
-              onClick={() => handleCreate("SOP")}
-              disabled={creating}
-            >
-              {creating ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Plus className="h-4 w-4" />
-              )}
-              สร้าง SOP
-            </Button>
-            <Button variant="outline" onClick={() => handleCreate("WI")} disabled={creating}>
-              สร้าง WI
-            </Button>
-            <Button variant="outline" onClick={() => handleCreate("OPL")} disabled={creating}>
-              สร้าง OPL
-            </Button>
-          </div>
+          <Button onClick={() => setDialogOpen(true)}>
+            <Plus className="h-4 w-4" />
+            สร้างเอกสาร
+          </Button>
         </div>
       </header>
 
@@ -107,9 +71,9 @@ function DocumentListPage() {
             <FileText className="mb-4 h-12 w-12 text-muted-foreground/50" />
             <h2 className="text-lg font-medium">ยังไม่มีเอกสาร</h2>
             <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-              เริ่มต้นด้วยการสร้างเอกสารใหม่ หรืออัปโหลดไฟล์ต้นฉบับในขั้นถัดไป
+              อัปโหลด Excel, Word, PDF หรือวางข้อความ แล้วระบบจะอ่านข้อมูลพร้อมแหล่งที่มา
             </p>
-            <Button className="mt-6" onClick={() => handleCreate("SOP")}>
+            <Button className="mt-6" onClick={() => setDialogOpen(true)}>
               <Plus className="h-4 w-4" />
               สร้างเอกสารแรก
             </Button>
@@ -142,6 +106,12 @@ function DocumentListPage() {
           </div>
         )}
       </main>
+
+      <NewDocDialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        onCreated={() => refresh()}
+      />
     </div>
   );
 }
