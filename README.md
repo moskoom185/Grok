@@ -1,29 +1,28 @@
-# Welcome to your Lovable project
+# SOP / WI / OPL Studio
 
-This project was built with [Lovable](https://lovable.dev).
+เว็บแอปสร้างเอกสาร **SOP / WI / OPL** จากไฟล์ต้นฉบับ (Excel, Word, PDF, รูป, ข้อความ) พร้อมติดตามแหล่งที่มา ตรวจทาน AI และส่งออก PNG / PDF / JSON / ZIP
 
-## Build with Lovable
+## Features (Phase 2–6)
+- Document model + templates (12)
+- Owner session แบบไม่มี login (HttpOnly cookie)
+- CRUD เอกสาร (Supabase หรือ memory fallback)
+- นำเข้า Excel / Word / ข้อความ (+ ข้อจำกัด PDF/รูป)
+- AI จัดโครงสร้าง + หน้าตรวจทาน (ห้ามแต่งตัวเลข/ขั้นตอนที่ไม่มีในต้นฉบับ)
+- Editor แก้ขั้นตอน / หน้า / ข้อความบนกระดาษ
+- Export PNG, PDF (print), JSON, ZIP
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+## Quick start
+See [DEPLOY.md](./DEPLOY.md) for environment variables and Vercel.
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+bun install
+bun run dev
 ```
 
-## Built with
+## Stack
+TanStack Start · React · TypeScript · Tailwind · Supabase (optional)
 
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
+## Integrity rules
+- ไม่แต่งตัวเลข / ขั้นตอน / ข้อกำหนดความปลอดภัยที่ไม่มีในต้นฉบับ
+- ไม่ใช้ภาพ AI แทนภาพจริงจากต้นฉบับ
+- แยก extracted / AI / user_confirmed ชัดเจน
