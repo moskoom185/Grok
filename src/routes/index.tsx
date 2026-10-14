@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { listDocs } from "@/lib/docs.functions";
+import { getStorageStatus } from "@/lib/system.functions";
 import { Button } from "@/components/ui/button";
 import { NewDocDialog } from "@/components/NewDocDialog";
-import { FileText, Plus, Loader2 } from "lucide-react";
+import { FileText, Plus, Loader2, AlertTriangle, Database, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/")({
@@ -23,6 +24,11 @@ function DocumentListPage() {
   const [docs, setDocs] = useState<DocSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [status, setStatus] = useState<{
+    storage: "supabase" | "memory";
+    aiConfigured: boolean;
+    note: string;
+  } | null>(null);
 
   async function refresh() {
     setLoading(true);
@@ -39,6 +45,9 @@ function DocumentListPage() {
 
   useEffect(() => {
     refresh();
+    getStorageStatus()
+      .then(setStatus)
+      .catch(() => setStatus(null));
   }, []);
 
   return (
@@ -61,6 +70,39 @@ function DocumentListPage() {
       </header>
 
       <main className="mx-auto max-w-6xl px-6 py-8">
+        {status && (
+          <div className="mb-6 flex flex-wrap gap-3 text-sm">
+            <div
+              className={`flex items-center gap-2 rounded-lg border px-3 py-2 ${
+                status.storage === "memory"
+                  ? "border-amber-300 bg-amber-50 text-amber-950"
+                  : "border-green-200 bg-green-50 text-green-900"
+              }`}
+            >
+              {status.storage === "memory" ? (
+                <AlertTriangle className="h-4 w-4" />
+              ) : (
+                <Database className="h-4 w-4" />
+              )}
+              <span>{status.note}</span>
+            </div>
+            <div
+              className={`flex items-center gap-2 rounded-lg border px-3 py-2 ${
+                status.aiConfigured
+                  ? "border-green-200 bg-green-50 text-green-900"
+                  : "border-slate-200 bg-slate-50 text-slate-700"
+              }`}
+            >
+              <Sparkles className="h-4 w-4" />
+              <span>
+                {status.aiConfigured
+                  ? "AI พร้อมใช้งาน (มี API Key ฝั่งเซิร์ฟเวอร์)"
+                  : "ยังไม่มี AI API Key — สร้างเอกสารเปล่า/แก้ไขเองได้"}
+              </span>
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <div className="flex items-center justify-center py-20 text-muted-foreground">
             <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -95,9 +137,7 @@ function DocumentListPage() {
                     {new Date(doc.updated_at).toLocaleDateString("th-TH")}
                   </span>
                 </div>
-                <h3 className="font-medium group-hover:text-primary">
-                  {doc.title}
-                </h3>
+                <h3 className="font-medium group-hover:text-primary">{doc.title}</h3>
                 <p className="mt-1 text-xs text-muted-foreground">
                   เทมเพลต: {doc.template}
                 </p>
