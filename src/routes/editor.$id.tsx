@@ -1,9 +1,9 @@
 /**
- * Phase 5 Editor — edit title, steps, pages; basic canvas objects.
+ * Phase 5–6 Editor — edit + export PNG/PDF/JSON/ZIP
  */
 
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getDoc, saveDoc } from "@/lib/docs.functions";
 import type {
   CanvasObject,
@@ -15,6 +15,7 @@ import type {
 } from "@/lib/doc-model";
 import { createTrackedText, worstStatus } from "@/lib/doc-model";
 import { Button } from "@/components/ui/button";
+import { ExportMenu } from "@/components/ExportMenu";
 import {
   ArrowLeft,
   ChevronDown,
@@ -65,6 +66,7 @@ function EditorPage() {
   const [dirty, setDirty] = useState(false);
   const [activePageId, setActivePageId] = useState<string | null>(null);
   const [selectedStepId, setSelectedStepId] = useState<string | null>(null);
+  const paperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     (async () => {
@@ -249,7 +251,7 @@ function EditorPage() {
   if (!doc || !content) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4">
-        <p className="text-muted-foreground">ไม่พบเอกสาร หรือไม่มีสิทธิ์เข้าถึง</p>
+        <p className="text-muted-foreground">ไม่พบเอกสาร หรือไม่มีสิทธิ์</p>
         <Button asChild variant="outline">
           <Link to="/">กลับหน้ารายการ</Link>
         </Button>
@@ -301,6 +303,7 @@ function EditorPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <ExportMenu targetRef={paperRef} content={content} title={content.meta.title} />
           <Button variant="outline" size="sm" onClick={addTextObject}>
             <Type className="h-4 w-4" />
             ข้อความ
@@ -390,6 +393,7 @@ function EditorPage() {
 
         <main className="flex flex-1 justify-center overflow-auto bg-muted/40 p-6">
           <div
+            ref={paperRef}
             className="relative bg-white shadow-lg"
             style={{ width: paperW, minHeight: paperH, padding: 48 }}
           >
@@ -527,26 +531,6 @@ function EditorPage() {
                       <button type="button" className="text-red-600" onClick={() => deleteObject(obj.id)}>
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
-                    </div>
-                    <div className="mt-1 grid grid-cols-2 gap-1 text-xs">
-                      <label>
-                        X
-                        <input
-                          type="number"
-                          className="w-full rounded border px-1"
-                          value={obj.x}
-                          onChange={(e) => updateObject(obj.id, { x: Number(e.target.value) })}
-                        />
-                      </label>
-                      <label>
-                        Y
-                        <input
-                          type="number"
-                          className="w-full rounded border px-1"
-                          value={obj.y}
-                          onChange={(e) => updateObject(obj.id, { y: Number(e.target.value) })}
-                        />
-                      </label>
                     </div>
                   </div>
                 ))
