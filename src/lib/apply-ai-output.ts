@@ -1,9 +1,17 @@
 /**
  * Map AI output + extract images into DocContent for saving.
+ * Phase 8: also place image canvas objects for linked step photos.
  */
 
 import type { AiDocOutput } from "./ai-schema";
-import type { DocContent, DocImage, Step, TrackedText } from "./doc-model";
+import type {
+  CanvasObject,
+  DocContent,
+  DocImage,
+  ImageObject,
+  Step,
+  TrackedText,
+} from "./doc-model";
 import { createEmptyDocContent } from "./doc-model";
 import type { ExtractResult } from "./extract";
 
@@ -62,6 +70,31 @@ export function applyAiOutputToDoc(
     };
   });
 
+  // Place real extract images as canvas objects (never AI-generated photos)
+  const objects: CanvasObject[] = [];
+  let z = 1;
+  let y = 720;
+  for (const img of images.slice(0, 6)) {
+    const obj: ImageObject = {
+      id: crypto.randomUUID(),
+      type: "image",
+      pageId,
+      x: 48,
+      y,
+      width: 280,
+      height: 180,
+      rotation: 0,
+      opacity: 1,
+      zIndex: z++,
+      locked: false,
+      style: {},
+      imageId: img.id,
+      objectFit: "contain",
+    };
+    objects.push(obj);
+    y += 200;
+  }
+
   return {
     ...base,
     meta: {
@@ -98,7 +131,7 @@ export function applyAiOutputToDoc(
     })),
     keyPoints: ai.keyPoints?.map(mapTracked),
     images,
-    objects: [],
+    objects,
     pages: [{ id: pageId, index: 0 }],
   };
 }
