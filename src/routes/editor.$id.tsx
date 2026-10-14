@@ -1,5 +1,5 @@
 /**
- * Phase 5–6 Editor — edit + export PNG/PDF/JSON/ZIP
+ * Phase 5–8 Editor — edit, export, drag objects, real images
  */
 
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -16,6 +16,7 @@ import type {
 import { createTrackedText, worstStatus } from "@/lib/doc-model";
 import { Button } from "@/components/ui/button";
 import { ExportMenu } from "@/components/ExportMenu";
+import { CanvasObjectsLayer } from "@/components/CanvasObjectsLayer";
 import {
   ArrowLeft,
   ChevronDown,
@@ -66,6 +67,7 @@ function EditorPage() {
   const [dirty, setDirty] = useState(false);
   const [activePageId, setActivePageId] = useState<string | null>(null);
   const [selectedStepId, setSelectedStepId] = useState<string | null>(null);
+  const [dragId, setDragId] = useState<string | null>(null);
   const paperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -322,7 +324,7 @@ function EditorPage() {
       <div className="flex flex-1 overflow-hidden">
         <aside className="flex w-72 shrink-0 flex-col border-r bg-card">
           <div className="space-y-2 border-b p-3">
-            <label className="text-xs font-medium text-muted-foreground">เลขที่เอกสาร</label>
+            <label className="text-xs font-medium text-muted-foreground">เลขที่</label>
             <input
               className="w-full rounded border px-2 py-1 text-sm"
               value={content.meta.docNo ?? ""}
@@ -404,36 +406,14 @@ function EditorPage() {
               <h2 className="text-2xl font-semibold">{content.meta.title}</h2>
             </div>
 
-            {pageObjects.map((obj) => {
-              if (obj.type !== "text") return null;
-              const t = obj as TextObject;
-              return (
-                <div
-                  key={obj.id}
-                  className="absolute rounded border border-transparent hover:border-primary/40"
-                  style={{
-                    left: obj.x,
-                    top: obj.y,
-                    width: obj.width,
-                    minHeight: obj.height,
-                    opacity: obj.opacity,
-                    transform: `rotate(${obj.rotation}deg)`,
-                    zIndex: obj.zIndex,
-                    fontSize: t.fontSize ?? 16,
-                    color: t.color ?? "#111",
-                  }}
-                >
-                  <textarea
-                    className="h-full w-full resize-none bg-transparent outline-none"
-                    value={t.content}
-                    disabled={obj.locked}
-                    onChange={(e) =>
-                      updateObject(obj.id, { content: e.target.value } as Partial<TextObject>)
-                    }
-                  />
-                </div>
-              );
-            })}
+            <CanvasObjectsLayer
+              objects={pageObjects}
+              images={content.images}
+              paperRef={paperRef}
+              dragId={dragId}
+              onDragId={setDragId}
+              onUpdate={(id, patch) => updateObject(id, patch)}
+            />
 
             <ol className="relative z-10 space-y-4">
               {sortedSteps.map((step) => (
@@ -450,6 +430,22 @@ function EditorPage() {
                   <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">
                     {step.content.text || "(ยังไม่มีเนื้อหา)"}
                   </p>
+                  {step.imageIds?.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {step.imageIds.map((iid) => {
+                        const im = content.images.find((x) => x.id === iid);
+                        if (!im) return null;
+                        return (
+                          <img
+                            key={iid}
+                            src={im.src}
+                            alt={im.originalName || "step"}
+                            className="h-24 max-w-[160px] rounded border object-contain"
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
                 </li>
               ))}
             </ol>
